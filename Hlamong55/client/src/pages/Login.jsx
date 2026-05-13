@@ -10,7 +10,7 @@ const Login = () => {
             Welcome Back 👋
           </h1>
 
-          <p className="text-base-content/70 mt-2">
+          <p className="text-gray-700 mt-2">
             Login to continue chatting 💬
           </p>
         </div>
@@ -33,7 +33,7 @@ const Login = () => {
           </button>
         </form>
 
-        <p className="text-center text-sm text-base-content/70">
+        <p className="text-center text-gray-600">
           Don&apos;t have an account?{" "}
           <Link
             to="/register"
