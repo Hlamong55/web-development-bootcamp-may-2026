@@ -28,9 +28,14 @@ const Login = () => {
         "/auth/login",
         formData
       );
-      console.log(response.data);
-      alert("Login successful ✅");
 
+      localStorage.setItem("token", response.data.token);
+
+      localStorage.setItem("user",
+        JSON.stringify(response.data.user)
+      );
+
+      alert("Login successful ✅");
       navigate("/chat");
 
     } catch (error) {

@@ -1,6 +1,8 @@
+import { RiLogoutCircleRLine } from "react-icons/ri";
+
 const ChatHeader = () => {
   return (
-    <div className="h-20 bg-base-100 border-b border-base-300 px-6 flex items-center justify-between">
+    <div className="h-18 bg-base-100 border-b border-base-300 px-5 flex items-center justify-between">
       <div className="flex items-center gap-3">
         <button className="btn btn-ghost btn-circle md:hidden">☰</button>
 
@@ -16,6 +18,18 @@ const ChatHeader = () => {
           <p className="text-sm text-success">Online</p>
         </div>
       </div>
+
+      <button
+          onClick={() => {
+            localStorage.removeItem("token");
+            localStorage.removeItem("user");
+
+            window.location.href = "/login";
+          }}
+          className="btn btn-sm bg-red-500 text-white hover:bg-red-600 hover:scale-105 transition rounded-lg"
+        >
+          Logout <RiLogoutCircleRLine size={18} />
+        </button>
     </div>
   );
 };
