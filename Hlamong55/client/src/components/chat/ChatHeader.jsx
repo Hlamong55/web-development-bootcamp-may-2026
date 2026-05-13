@@ -3,7 +3,7 @@ import { RiLogoutCircleRLine } from "react-icons/ri";
 const ChatHeader = () => {
   return (
     <div className="h-18 bg-base-100 border-b border-base-300 px-5 flex items-center justify-between">
-      <div className="flex items-center gap-3">
+      <div className="flex items-center">
         <button className="btn btn-ghost btn-circle md:hidden">☰</button>
 
         <div className="avatar online">
