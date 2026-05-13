@@ -1,7 +1,47 @@
-import { Link } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+
 import AuthLayout from "../layouts/AuthLayout";
+import axiosInstance from "../lib/axios";
 
 const Login = () => {
+
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+
+      const response = await axiosInstance.post(
+        "/auth/login",
+        formData
+      );
+      console.log(response.data);
+      alert("Login successful ✅");
+
+      navigate("/chat");
+
+    } catch (error) {
+      console.log(error.response?.data);
+
+      alert(
+        error.response?.data?.message || "Login failed"
+      );
+    }
+  };
+
   return (
     <AuthLayout>
       <div className="space-y-6">
@@ -15,17 +55,26 @@ const Login = () => {
           </p>
         </div>
 
-        <form className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+        >
           <input
             type="email"
+            name="email"
             placeholder="Email Address"
             className="input input-bordered w-full h-12 rounded-xl"
+            value={formData.email}
+            onChange={handleChange}
           />
 
           <input
             type="password"
+            name="password"
             placeholder="Password"
             className="input input-bordered w-full h-12 rounded-xl"
+            value={formData.password}
+            onChange={handleChange}
           />
 
           <button className="btn btn-primary w-full h-12 rounded-xl text-base hover:scale-105 hover:bg-purple-900 transition">
