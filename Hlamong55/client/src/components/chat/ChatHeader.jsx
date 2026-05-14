@@ -1,6 +1,12 @@
+import { formatDistanceToNow } from "date-fns";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 
-const ChatHeader = ({ selectedUser }) => {
+const ChatHeader = ({ selectedUser, onlineUsers }) => {
+
+  const isOnline =
+    onlineUsers?.includes(
+      selectedUser?._id
+    );
 
   return (
     <div className="h-18 bg-base-100 border-b border-base-300 px-5 flex items-center justify-between">
@@ -12,10 +18,13 @@ const ChatHeader = ({ selectedUser }) => {
         </button>
 
 
-        <div className="avatar online">
+        <div
+          className={`avatar ${
+            isOnline ? "online" : "offline"
+          }`}
+        >
 
           <div className="w-12 rounded-full">
-
             <img
               src={
                 selectedUser?.avatar ||
@@ -25,20 +34,34 @@ const ChatHeader = ({ selectedUser }) => {
             />
 
           </div>
-
         </div>
 
 
         <div className="ml-2.5">
-
           <h2 className="font-semibold text-lg">
             {selectedUser?.name || "Select User"}
           </h2>
 
-          <p className="text-sm text-success">
-            Online
-          </p>
+          <p
+            className={`text-sm ${
+              isOnline
+                ? "text-success"
+                : "text-gray-500"
+            }`}
+          >
 
+            {isOnline
+              ? "Online"
+              : selectedUser?.lastSeen
+              ? `Last seen ${formatDistanceToNow(
+                  new Date(selectedUser.lastSeen),
+                  {
+                    addSuffix: true,
+                  }
+                )}`
+              : "Offline"}
+
+          </p>
         </div>
 
       </div>

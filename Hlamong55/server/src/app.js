@@ -12,6 +12,10 @@ app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 
+const messageRoutes = require("./routes/messageRoutes");
+
+app.use("/api/messages", messageRoutes);
+
 app.get("/", (req, res) => {
   res.send("Server running...");
 });

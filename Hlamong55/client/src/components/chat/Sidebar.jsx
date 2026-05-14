@@ -1,4 +1,4 @@
-const Sidebar = ({ users, selectedUser, setSelectedUser }) => {
+const Sidebar = ({ users, selectedUser, setSelectedUser, }) => {
   return (
     <div className="w-80 bg-base-100 border-r border-base-300 hidden md:flex flex-col">
       <div className="p-5 border-b border-base-300">

@@ -4,6 +4,8 @@ const http = require("http");
 const { Server } = require("socket.io");
 
 const app = require("./src/app");
+const Message = require("./src/models/Message");
+const User = require("./src/models/User");
 const connectDB = require("./src/config/db");
 
 connectDB();
@@ -33,12 +35,29 @@ io.on("connection", (socket) => {
   socket.on("join", (userId) => {
     onlineUsers[userId] = socket.id;
     console.log("Online Users:", onlineUsers);
+
+  io.emit(
+  "online_users",
+  Object.keys(onlineUsers)
+  );
+});
+
+
+  socket.on("send_message", async (messageData) => {
+    console.log(messageData);
+
+  const newMessage = await Message.create({
+    senderId: messageData.senderId,
+    receiverId: messageData.receiverId,
+    text: messageData.text,
   });
 
 
-  // PRIVATE MESSAGE
-  socket.on("send_message", (messageData) => {
-    console.log(messageData);
+  const populatedMessage =
+    await newMessage.populate(
+      "senderId receiverId",
+      "name email avatar"
+    );
 
 
     const receiverSocketId =
@@ -51,7 +70,6 @@ io.on("connection", (socket) => {
       );
     }
 
-
     socket.emit(
       "receive_message",
       messageData
@@ -59,21 +77,32 @@ io.on("connection", (socket) => {
   });
 
 
-  socket.on("disconnect", () => {
+  socket.on("disconnect", async () => {
     console.log("User disconnected:", socket.id);
 
-
     for (const userId in onlineUsers) {
-
       if (
         onlineUsers[userId] === socket.id
       ) {
 
+        await User.findByIdAndUpdate(
+        userId,
+        {
+          lastSeen: new Date(),
+        }
+      );
+
         delete onlineUsers[userId];
       }
     }
+
+    io.emit(
+    "online_users",
+    Object.keys(onlineUsers)
+  );
   });
 });
+
 
 
 server.listen(PORT, () => {

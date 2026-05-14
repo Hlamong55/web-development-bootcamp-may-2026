@@ -12,6 +12,7 @@ const Chat = () => {
   const [messages, setMessages] = useState([]);
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
 
 
 
@@ -40,7 +41,6 @@ const Chat = () => {
   }, []);
 
 
-
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -48,7 +48,6 @@ const Chat = () => {
       socket.emit("join", currentUser.id);
     }
   }, []);
-
 
 
   useEffect(() => {
@@ -60,6 +59,50 @@ const Chat = () => {
       socket.off("receive_message");
     };
   }, []);
+
+
+  useEffect(() => {
+  const fetchMessages = async () => {
+    try {
+      const currentUser = JSON.parse(
+        localStorage.getItem("user")
+      );
+
+      if (!selectedUser) return;
+
+
+      const response =
+        await axiosInstance.get(
+          `/messages?senderId=${currentUser.id}&receiverId=${selectedUser._id}`
+        );
+
+
+      setMessages(response.data.messages);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  fetchMessages();
+
+  }, [selectedUser]);
+
+
+  useEffect(() => {
+  socket.on(
+    "online_users",
+    (users) => {
+      setOnlineUsers(users);
+    }
+  );
+
+  return () => {
+    socket.off("online_users");
+  };
+
+  }, []);
+
+
 
   const handleSendMessage = (messageText) => {
     if (!messageText.trim()) return;
@@ -78,7 +121,7 @@ const Chat = () => {
   };
 
 
-  
+
   return (
     <div className="h-screen bg-base-200 flex overflow-hidden">
       <Sidebar
@@ -88,7 +131,10 @@ const Chat = () => {
       />
 
       <div className="flex-1 flex flex-col">
-        <ChatHeader selectedUser={selectedUser} />
+        <ChatHeader 
+        selectedUser={selectedUser}
+        onlineUsers={onlineUsers}
+        />
 
         <MessageList
           messages={messages.filter(
