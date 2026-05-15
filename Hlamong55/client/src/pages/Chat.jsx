@@ -23,7 +23,7 @@ const Chat = () => {
         const currentUser = JSON.parse(localStorage.getItem("user"));
 
         const filteredUsers = response.data.users.filter(
-          (user) => user._id !== currentUser.id,
+          (user) => user._id !== (currentUser._id || currentUser.id),
         );
 
         setUsers(filteredUsers);
@@ -42,8 +42,10 @@ const Chat = () => {
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
-    if (currentUser?.id) {
-      socket.emit("join", currentUser.id);
+    const userId = currentUser?._id || currentUser?.id;
+
+    if (userId) {
+      socket.emit("join", userId);
     }
   }, []);
 
@@ -65,7 +67,9 @@ const Chat = () => {
         if (!selectedUser) return;
 
         const response = await axiosInstance.get(
-          `/messages?senderId=${currentUser.id}&receiverId=${selectedUser._id}`,
+          `/messages?senderId=${
+            currentUser._id || currentUser.id
+          }&receiverId=${selectedUser._id}`,
         );
 
         setMessages(response.data.messages);
@@ -88,24 +92,19 @@ const Chat = () => {
   }, []);
 
   useEffect(() => {
-  socket.on("typing", (userName) => {
-    setTypingUser(userName);
-  });
+    socket.on("typing", (userName) => {
+      setTypingUser(userName);
+    });
 
-  socket.on("stop_typing", () => {
-    setTypingUser(null);
-  });
+    socket.on("stop_typing", () => {
+      setTypingUser(null);
+    });
 
-  return () => {
-    socket.off("typing");
-    socket.off("stop_typing");
-  };
-
-}, []);
-
-
-
-
+    return () => {
+      socket.off("typing");
+      socket.off("stop_typing");
+    };
+  }, []);
 
   const handleSendMessage = (messageText) => {
     if (!messageText.trim()) return;
@@ -114,7 +113,7 @@ const Chat = () => {
 
     const messageData = {
       text: messageText,
-      senderId: currentUser.id,
+      senderId: currentUser._id || currentUser.id,
       senderName: currentUser.name,
       receiverId: selectedUser?._id,
       time: new Date().toLocaleTimeString(),
@@ -134,10 +133,7 @@ const Chat = () => {
       />
 
       <div className="flex-1 flex flex-col">
-        <ChatHeader
-          selectedUser={selectedUser}
-          onlineUsers={onlineUsers}
-        />
+        <ChatHeader selectedUser={selectedUser} onlineUsers={onlineUsers} />
 
         <MessageList
           messages={messages.filter((msg) => {

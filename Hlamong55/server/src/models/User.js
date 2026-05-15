@@ -14,6 +14,16 @@ const userSchema = new mongoose.Schema(
       unique: true,
     },
 
+    phone: {
+      type: String,
+      default: "",
+    },
+
+    bio: {
+      type: String,
+      default: "",
+    },
+
     password: {
       type: String,
       required: true,
@@ -32,7 +42,7 @@ const userSchema = new mongoose.Schema(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 module.exports = mongoose.model("User", userSchema);

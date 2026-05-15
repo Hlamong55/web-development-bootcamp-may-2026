@@ -2,6 +2,7 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 const User = require("../models/User");
+const cloudinary = require("../config/cloudinary");
 
 
 // jwt token
@@ -134,8 +135,49 @@ const getUsers = async (req, res) => {
 };
 
 
+// cloudinary
+const updateProfile = async (req, res) => {
+  try {
+    const { userId, name, phone, bio, avatar } = req.body;
+
+    let avatarUrl = "";
+    if (avatar) {
+      const uploadedResponse = await cloudinary.uploader.upload(
+        avatar,
+        {
+          folder: "chat-app-profiles",
+        }
+      );
+
+      avatarUrl = uploadedResponse.secure_url;
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        name,
+        phone,
+        bio,
+        ...(avatarUrl && { avatar: avatarUrl }),
+      },
+      { new: true }
+    );
+
+    res.status(200).json({
+      success: true,
+      user: updatedUser,
+    });
+  } catch (error) {
+    res.status(500).json({
+      message: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   registerUser,
   loginUser,
   getUsers,
+  updateProfile,
 };

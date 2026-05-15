@@ -24,7 +24,7 @@ const ChatHeader = ({ selectedUser, onlineUsers }) => {
           </h2>
 
           <p
-            className={`text-sm ${isOnline ? "text-green-500 font-semibold" : "text-gray-500"}`}
+            className={`text-sm ${isOnline ? "text-green-500 font-semibold" : "text-gray-500 font-medium"}`}
           >
             {isOnline
               ? "Online"
