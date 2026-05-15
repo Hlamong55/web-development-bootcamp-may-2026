@@ -1,4 +1,9 @@
-const Sidebar = ({ users, selectedUser, setSelectedUser, }) => {
+const Sidebar = ({
+  users,
+  selectedUser,
+  setSelectedUser,
+  typingUser,
+}) => {
   return (
     <div className="w-80 bg-base-100 border-r border-base-300 hidden md:flex flex-col">
       <div className="p-5 border-b border-base-300">
@@ -23,7 +28,13 @@ const Sidebar = ({ users, selectedUser, setSelectedUser, }) => {
             <div className="text-left">
               <h2 className="font-semibold text-lg">{user.name}</h2>
 
-              <p className="text-sm text-gray-500">{user.email}</p>
+              <p
+                className={`text-sm ${
+                  typingUser === user.name ? "text-primary" : "text-gray-500"
+                }`}
+              >
+                {typingUser === user.name ? "Typing..." : user.email}
+              </p>
             </div>
           </button>
         ))}

@@ -13,8 +13,7 @@ const Chat = () => {
   const [users, setUsers] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
-
-
+  const [typingUser, setTypingUser] = useState(null);
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -40,7 +39,6 @@ const Chat = () => {
     fetchUsers();
   }, []);
 
-
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
 
@@ -48,7 +46,6 @@ const Chat = () => {
       socket.emit("join", currentUser.id);
     }
   }, []);
-
 
   useEffect(() => {
     socket.on("receive_message", (data) => {
@@ -60,47 +57,53 @@ const Chat = () => {
     };
   }, []);
 
-
   useEffect(() => {
-  const fetchMessages = async () => {
-    try {
-      const currentUser = JSON.parse(
-        localStorage.getItem("user")
-      );
+    const fetchMessages = async () => {
+      try {
+        const currentUser = JSON.parse(localStorage.getItem("user"));
 
-      if (!selectedUser) return;
+        if (!selectedUser) return;
 
-
-      const response =
-        await axiosInstance.get(
-          `/messages?senderId=${currentUser.id}&receiverId=${selectedUser._id}`
+        const response = await axiosInstance.get(
+          `/messages?senderId=${currentUser.id}&receiverId=${selectedUser._id}`,
         );
 
+        setMessages(response.data.messages);
+      } catch (error) {
+        console.log(error);
+      }
+    };
 
-      setMessages(response.data.messages);
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  fetchMessages();
-
+    fetchMessages();
   }, [selectedUser]);
 
+  useEffect(() => {
+    socket.on("online_users", (users) => {
+      setOnlineUsers(users);
+    });
+
+    return () => {
+      socket.off("online_users");
+    };
+  }, []);
 
   useEffect(() => {
-  socket.on(
-    "online_users",
-    (users) => {
-      setOnlineUsers(users);
-    }
-  );
+  socket.on("typing", (userName) => {
+    setTypingUser(userName);
+  });
+
+  socket.on("stop_typing", () => {
+    setTypingUser(null);
+  });
 
   return () => {
-    socket.off("online_users");
+    socket.off("typing");
+    socket.off("stop_typing");
   };
 
-  }, []);
+}, []);
+
+
 
 
 
@@ -120,31 +123,39 @@ const Chat = () => {
     socket.emit("send_message", messageData);
   };
 
-
-
   return (
     <div className="h-screen bg-base-200 flex overflow-hidden">
       <Sidebar
         users={users}
+        onlineUsers={onlineUsers}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
+        typingUser={typingUser}
       />
 
       <div className="flex-1 flex flex-col">
-        <ChatHeader 
-        selectedUser={selectedUser}
-        onlineUsers={onlineUsers}
+        <ChatHeader
+          selectedUser={selectedUser}
+          onlineUsers={onlineUsers}
         />
 
         <MessageList
-          messages={messages.filter(
-            (msg) =>
-              msg.senderId === selectedUser?._id ||
-              msg.receiverId === selectedUser?._id,
-          )}
+          messages={messages.filter((msg) => {
+            const senderId = msg.senderId?._id || msg.senderId;
+
+            const receiverId = msg.receiverId?._id || msg.receiverId;
+
+            return (
+              senderId === selectedUser?._id || receiverId === selectedUser?._id
+            );
+          })}
+          typingUser={typingUser}
         />
 
-        <MessageInput onSendMessage={handleSendMessage} />
+        <MessageInput
+          onSendMessage={handleSendMessage}
+          selectedUser={selectedUser}
+        />
       </div>
     </div>
   );

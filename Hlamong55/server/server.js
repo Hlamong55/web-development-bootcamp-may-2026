@@ -29,12 +29,12 @@ const io = new Server(server, {
 const onlineUsers = {};
 
 io.on("connection", (socket) => {
-  console.log("User connected:", socket.id);
+  // console.log("User connected:", socket.id);
 
 
   socket.on("join", (userId) => {
     onlineUsers[userId] = socket.id;
-    console.log("Online Users:", onlineUsers);
+    // console.log("Online Users:", onlineUsers);
 
   io.emit(
   "online_users",
@@ -75,6 +75,34 @@ io.on("connection", (socket) => {
       messageData
     );
   });
+
+
+
+  socket.on("typing", (data) => {
+
+  const receiverSocketId =
+    onlineUsers[data.receiverId];
+
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit(
+      "typing",
+      data.senderName
+    );
+  }
+  });
+
+
+  socket.on("stop_typing", (data) => {
+  const receiverSocketId =
+    onlineUsers[data.receiverId];
+
+  if (receiverSocketId) {
+    io.to(receiverSocketId).emit(
+      "stop_typing"
+    );
+  }
+  });
+
 
 
   socket.on("disconnect", async () => {
