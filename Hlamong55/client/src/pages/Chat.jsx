@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 import Sidebar from "../components/chat/Sidebar";
 import ChatHeader from "../components/chat/ChatHeader";
@@ -10,34 +10,55 @@ import axiosInstance from "../lib/axios";
 
 const Chat = () => {
   const [messages, setMessages] = useState([]);
-  const [users, setUsers] = useState([]);
+  const [conversations, setConversations] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [typingUser, setTypingUser] = useState(null);
 
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await axiosInstance.get("/auth/users");
+  const fetchConversations = useCallback (async () => {
+  try {
 
-        const currentUser = JSON.parse(localStorage.getItem("user"));
+    const currentUser = JSON.parse(
+      localStorage.getItem("user")
+    );
 
-        const filteredUsers = response.data.users.filter(
-          (user) => user._id !== (currentUser._id || currentUser.id),
-        );
+    const userId =
+      currentUser._id ||
+      currentUser.id;
 
-        setUsers(filteredUsers);
+    const response =
+      await axiosInstance.get(
+        `/conversations?userId=${userId}`
+      );
 
-        if (filteredUsers.length > 0) {
-          setSelectedUser(filteredUsers[0]);
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
 
-    fetchUsers();
-  }, []);
+    setConversations(
+      response.data.conversations
+    );
+
+    if (
+      response.data.conversations
+        .length > 0
+    ) {
+      setSelectedUser((prev) => {
+
+        if (prev) return prev;
+        return response.data
+          .conversations[0].user;
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+  }
+}, []);
+
+/* eslint-disable react-hooks/set-state-in-effect */
+useEffect(() => {
+  fetchConversations();
+
+}, [fetchConversations]);
+
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
@@ -49,15 +70,28 @@ const Chat = () => {
     }
   }, []);
 
-  useEffect(() => {
-    socket.on("receive_message", (data) => {
-      setMessages((prev) => [...prev, data]);
-    });
 
-    return () => {
-      socket.off("receive_message");
-    };
+  useEffect(() => {
+  socket.on(
+    "receive_message",
+    (data) => {
+
+      setMessages((prev) => [
+        ...prev,
+        data,
+      ]);
+      fetchConversations();
+    }
+  );
+
+  return () => {
+    socket.off(
+      "receive_message"
+    );
+  };
+
   }, []);
+
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -73,6 +107,14 @@ const Chat = () => {
         );
 
         setMessages(response.data.messages);
+        await axiosInstance.put("/messages/seen", {
+          senderId: selectedUser._id,
+          receiverId: currentUser._id || currentUser.id,
+        });
+
+        socket.emit("messages_seen", {
+          senderId: selectedUser._id,
+        });
       } catch (error) {
         console.log(error);
       }
@@ -106,6 +148,21 @@ const Chat = () => {
     };
   }, []);
 
+  useEffect(() => {
+    socket.on("messages_seen", () => {
+      setMessages((prev) =>
+        prev.map((msg) => ({
+          ...msg,
+          seen: true,
+        })),
+      );
+    });
+
+    return () => {
+      socket.off("messages_seen");
+    };
+  }, []);
+
   const handleSendMessage = (messageText) => {
     if (!messageText.trim()) return;
 
@@ -125,7 +182,7 @@ const Chat = () => {
   return (
     <div className="h-screen bg-base-200 flex overflow-hidden">
       <Sidebar
-        users={users}
+        conversations={conversations}
         onlineUsers={onlineUsers}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}

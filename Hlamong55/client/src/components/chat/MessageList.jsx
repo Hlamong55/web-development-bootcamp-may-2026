@@ -16,7 +16,7 @@ const MessageList = ({ messages, typingUser }) => {
       {messages.map((msg, index) => {
         const senderId = msg.senderId?._id || msg.senderId;
 
-        const isMyMessage = senderId === currentUser?.id;
+        const isMyMessage = senderId === (currentUser?._id || currentUser?.id);
 
         return (
           <div
@@ -33,12 +33,19 @@ const MessageList = ({ messages, typingUser }) => {
               <span className="text-[10px] opacity-70 block mt-1">
                 {msg.time}
               </span>
+
+              {/* SEEN STATUS */}
+              {isMyMessage && msg.seen && (
+                <p className="text-[11px] text-green-200 mt-1 text-right">
+                  Seen
+                </p>
+              )}
             </div>
           </div>
         );
       })}
 
-      {/* Typing Indicator */}
+      {/* TYPING INDICATOR */}
       {typingUser && (
         <div className="chat chat-start">
           <div className="chat-bubble bg-base-300">

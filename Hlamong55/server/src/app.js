@@ -3,6 +3,7 @@ const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
 const authRoutes = require("./routes/authRoutes");
+const conversationRoutes = require("./routes/conversationRoutes");
 
 const app = express();
 
@@ -13,6 +14,8 @@ app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 
 const messageRoutes = require("./routes/messageRoutes");
+
+app.use("/api/conversations", conversationRoutes);
 
 app.use("/api/messages", messageRoutes);
 

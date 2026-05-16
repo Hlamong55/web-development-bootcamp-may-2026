@@ -156,7 +156,7 @@ const EditProfile = ({
 
           <button
             onClick={() => setIsOpen(false)}
-            className="btn"
+            className="btn rounded-lg border border-primary hover:scale-105 transition"
           >
             Cancel
           </button>
@@ -164,7 +164,7 @@ const EditProfile = ({
 
           <button
             onClick={handleSave}
-            className="btn btn-primary"
+            className="btn btn-primary rounded-lg hover:bg-violet-900 hover:scale-105 transition"
           >
             Save Changes
           </button>

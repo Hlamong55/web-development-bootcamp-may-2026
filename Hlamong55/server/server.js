@@ -91,7 +91,6 @@ io.on("connection", (socket) => {
   }
   });
 
-
   socket.on("stop_typing", (data) => {
   const receiverSocketId =
     onlineUsers[data.receiverId];
@@ -101,6 +100,24 @@ io.on("connection", (socket) => {
       "stop_typing"
     );
   }
+  });
+
+
+
+  socket.on(
+  "messages_seen",
+  (data) => {
+
+    const receiverSocketId =
+      onlineUsers[data.senderId];
+
+
+    if (receiverSocketId) {
+
+      io.to(receiverSocketId).emit(
+        "messages_seen"
+      );
+    }
   });
 
 
