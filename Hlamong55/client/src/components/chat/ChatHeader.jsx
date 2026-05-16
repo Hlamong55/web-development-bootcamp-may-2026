@@ -1,13 +1,18 @@
 import { formatDistanceToNow } from "date-fns";
 import { RiLogoutCircleRLine } from "react-icons/ri";
 
-const ChatHeader = ({ selectedUser, onlineUsers }) => {
+const ChatHeader = ({ selectedUser, onlineUsers, setShowSidebar }) => {
   const isOnline = onlineUsers?.includes(selectedUser?._id);
 
   return (
     <div className="h-18 bg-base-100 border-b border-base-300 px-5 flex items-center justify-between">
       <div className="flex items-center">
-        <button className="btn btn-ghost btn-circle md:hidden">☰</button>
+        <button
+          onClick={() => setShowSidebar(true)}
+          className="btn btn-ghost btn-circle md:hidden"
+        >
+          ☰
+        </button>
 
         <div className={`avatar ${isOnline ? "online" : "offline"}`}>
           <div className="w-12 rounded-full">

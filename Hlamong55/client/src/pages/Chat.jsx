@@ -14,51 +14,35 @@ const Chat = () => {
   const [selectedUser, setSelectedUser] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [typingUser, setTypingUser] = useState(null);
+  const [showSidebar, setShowSidebar] = useState(false);
 
-  const fetchConversations = useCallback (async () => {
-  try {
+  const fetchConversations = useCallback(async () => {
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("user"));
 
-    const currentUser = JSON.parse(
-      localStorage.getItem("user")
-    );
+      const userId = currentUser._id || currentUser.id;
 
-    const userId =
-      currentUser._id ||
-      currentUser.id;
-
-    const response =
-      await axiosInstance.get(
-        `/conversations?userId=${userId}`
+      const response = await axiosInstance.get(
+        `/conversations?userId=${userId}`,
       );
 
+      setConversations(response.data.conversations);
 
-    setConversations(
-      response.data.conversations
-    );
-
-    if (
-      response.data.conversations
-        .length > 0
-    ) {
-      setSelectedUser((prev) => {
-
-        if (prev) return prev;
-        return response.data
-          .conversations[0].user;
-      });
+      if (response.data.conversations.length > 0) {
+        setSelectedUser((prev) => {
+          if (prev) return prev;
+          return response.data.conversations[0].user;
+        });
+      }
+    } catch (error) {
+      console.log(error);
     }
+  }, []);
 
-  } catch (error) {
-    console.log(error);
-  }
-}, []);
-
-/* eslint-disable react-hooks/set-state-in-effect */
-useEffect(() => {
-  fetchConversations();
-
-}, [fetchConversations]);
-
+  /* eslint-disable react-hooks/set-state-in-effect */
+  useEffect(() => {
+    fetchConversations();
+  }, [fetchConversations]);
 
   useEffect(() => {
     const currentUser = JSON.parse(localStorage.getItem("user"));
@@ -70,28 +54,16 @@ useEffect(() => {
     }
   }, []);
 
-
   useEffect(() => {
-  socket.on(
-    "receive_message",
-    (data) => {
-
-      setMessages((prev) => [
-        ...prev,
-        data,
-      ]);
+    socket.on("receive_message", (data) => {
+      setMessages((prev) => [...prev, data]);
       fetchConversations();
-    }
-  );
+    });
 
-  return () => {
-    socket.off(
-      "receive_message"
-    );
-  };
-
-  }, []);
-
+    return () => {
+      socket.off("receive_message");
+    };
+  }, [fetchConversations]);
 
   useEffect(() => {
     const fetchMessages = async () => {
@@ -112,16 +84,19 @@ useEffect(() => {
           receiverId: currentUser._id || currentUser.id,
         });
 
+        await new Promise((resolve) => setTimeout(resolve, 200));
+
         socket.emit("messages_seen", {
           senderId: selectedUser._id,
         });
+        fetchConversations();
       } catch (error) {
         console.log(error);
       }
     };
 
     fetchMessages();
-  }, [selectedUser]);
+  }, [selectedUser, fetchConversations]);
 
   useEffect(() => {
     socket.on("online_users", (users) => {
@@ -151,17 +126,23 @@ useEffect(() => {
   useEffect(() => {
     socket.on("messages_seen", () => {
       setMessages((prev) =>
-        prev.map((msg) => ({
-          ...msg,
-          seen: true,
-        })),
+        prev.map((msg) => {
+          const senderId = msg.senderId?._id || msg.senderId;
+
+          return senderId === selectedUser?._id
+            ? {
+                ...msg,
+                seen: true,
+              }
+            : msg;
+        }),
       );
     });
 
     return () => {
       socket.off("messages_seen");
     };
-  }, []);
+  }, [selectedUser]);
 
   const handleSendMessage = (messageText) => {
     if (!messageText.trim()) return;
@@ -181,16 +162,29 @@ useEffect(() => {
 
   return (
     <div className="h-screen bg-base-200 flex overflow-hidden">
+      {showSidebar && (
+        <div
+          onClick={() => setShowSidebar(false)}
+          className="fixed inset-0 bg-black/30 z-40 md:hidden"
+        ></div>
+      )}
+
       <Sidebar
         conversations={conversations}
         onlineUsers={onlineUsers}
         selectedUser={selectedUser}
         setSelectedUser={setSelectedUser}
         typingUser={typingUser}
+        showSidebar={showSidebar}
+        setShowSidebar={setShowSidebar}
       />
 
       <div className="flex-1 flex flex-col">
-        <ChatHeader selectedUser={selectedUser} onlineUsers={onlineUsers} />
+        <ChatHeader
+          selectedUser={selectedUser}
+          onlineUsers={onlineUsers}
+          setShowSidebar={setShowSidebar}
+        />
 
         <MessageList
           messages={messages.filter((msg) => {

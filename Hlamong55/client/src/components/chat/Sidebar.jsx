@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { FiEdit } from "react-icons/fi";
+import { IoClose } from "react-icons/io5";
 import { format } from "date-fns";
 
 import EditProfile from "./EditProfile";
@@ -9,15 +10,28 @@ const Sidebar = ({
   selectedUser,
   setSelectedUser,
   typingUser,
+  showSidebar,
+  setShowSidebar,
 }) => {
   const currentUser = JSON.parse(localStorage.getItem("user"));
 
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="w-80 bg-base-100 border-r border-base-300 hidden md:flex flex-col">
-      <div className="p-5 border-b border-base-300">
+    <div
+      className={`fixed md:static z-50 w-80 h-full bg-white shadow-md border-r border-base-300 flex flex-col transition-all duration-300
+    ${showSidebar ? "left-0" : "-left-full"}
+    `}
+    >
+      <div className="p-5 border-b border-base-300 flex items-center justify-between">
         <h1 className="text-3xl font-bold">Chats</h1>
+
+        <button
+          onClick={() => setShowSidebar(false)}
+          className="btn btn-ghost btn-circle md:hidden"
+        >
+          <IoClose size={24} />
+        </button>
       </div>
 
       {/* USERS LIST */}
@@ -30,7 +44,10 @@ const Sidebar = ({
           return (
             <button
               key={user._id}
-              onClick={() => setSelectedUser(user)}
+              onClick={() => {
+                setSelectedUser(user);
+                setShowSidebar(false);
+              }}
               className={`w-full p-4 flex items-center gap-4 transition border-b border-base-200 hover:bg-base-200 ${
                 unread ? "bg-green-50" : ""
               } ${selectedUser?._id === user._id ? "bg-base-200" : ""}`}
@@ -56,35 +73,33 @@ const Sidebar = ({
                     {user.name}
                   </h2>
 
-                  <span className="text-xs text-gray-500 whitespace-nowrap ml-2">
+                  <span className="text-xs text-gray-600 whitespace-nowrap ml-2">
                     {format(new Date(conversation.latestMessageTime), "p")}
                   </span>
                 </div>
 
                 {/* BOTTOM ROW */}
-                <div className="flex items-center justify-between mt-1">
-                  <div className="flex items-center justify-between mt-1 gap-2">
-                    <p
-                      className={`text-sm truncate ${
-                        unread ? "font-medium text-black" : "text-gray-500"
-                      }`}
-                    >
-                      {typingUser === user.name
-                        ? "Typing..."
-                        : `${
-                            conversation.latestMessageSender ===
-                            (currentUser._id || currentUser.id)
-                              ? "You: "
-                              : ""
-                          }${conversation.latestMessage}`}
-                    </p>
+                <div className="flex items-center justify-between mt-1 gap-2">
+                  <p
+                    className={`text-sm truncate flex-1 ${
+                      unread ? "font-medium text-black" : "text-gray-500"
+                    }`}
+                  >
+                    {typingUser === user.name
+                      ? "Typing..."
+                      : `${
+                          conversation.latestMessageSender ===
+                          (currentUser._id || currentUser.id)
+                            ? "You: "
+                            : ""
+                        }${conversation.latestMessage}`}
+                  </p>
 
-                    {unread && (
-                      <span className="bg-primary text-white text-[10px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center">
-                        {conversation.unreadCount}
-                      </span>
-                    )}
-                  </div>
+                  {unread && (
+                    <span className="bg-green-500 text-white text-[10px] min-w-5 h-5 px-1 rounded-full flex items-center justify-center shrink-0">
+                      {conversation.unreadCount}
+                    </span>
+                  )}
                 </div>
               </div>
             </button>
