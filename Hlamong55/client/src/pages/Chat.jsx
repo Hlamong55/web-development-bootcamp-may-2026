@@ -16,6 +16,10 @@ const Chat = () => {
   const [typingUser, setTypingUser] = useState(null);
   const [showSidebar, setShowSidebar] = useState(false);
 
+  const currentUser = JSON.parse(
+  localStorage.getItem("user")
+);
+
   const fetchConversations = useCallback(async () => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("user"));
@@ -129,12 +133,19 @@ const Chat = () => {
         prev.map((msg) => {
           const senderId = msg.senderId?._id || msg.senderId;
 
-          return senderId === selectedUser?._id
-            ? {
-                ...msg,
-                seen: true,
-              }
-            : msg;
+          const receiverId = msg.receiverId?._id || msg.receiverId;
+
+          if (
+            senderId === (currentUser?._id || currentUser?.id) &&
+            receiverId === selectedUser?._id
+          ) {
+            return {
+              ...msg,
+              seen: true,
+            };
+          }
+
+          return msg;
         }),
       );
     });
@@ -142,7 +153,7 @@ const Chat = () => {
     return () => {
       socket.off("messages_seen");
     };
-  }, [selectedUser]);
+  }, [selectedUser, currentUser]);
 
   const handleSendMessage = (messageText) => {
     if (!messageText.trim()) return;
@@ -154,7 +165,7 @@ const Chat = () => {
       senderId: currentUser._id || currentUser.id,
       senderName: currentUser.name,
       receiverId: selectedUser?._id,
-      time: new Date().toLocaleTimeString(),
+      createdAt: new Date(),
     };
 
     socket.emit("send_message", messageData);
